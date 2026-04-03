@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SANKALAN — Deep Space Nebula</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; width:100vw; height:100vh; }
+canvas { display:block; position:absolute; top:0; left:0; }
+#c2 { mix-blend-mode: screen; }
+.ui {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;
+  padding: clamp(2rem, 5vw, 5rem);
+  pointer-events:none;
+}
+.tag {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.55rem, 0.9vw, 0.72rem);
+  letter-spacing: 0.5em;
+  color: rgba(160, 210, 255, 0.4);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: rise 1.8s ease 0.4s forwards;
+}
+.headline {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(3.5rem, 10vw, 9.5rem);
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: 0.15em;
+  line-height: 1;
+  text-shadow:
+    0 0 50px rgba(100,170,255,0.6),
+    0 0 120px rgba(80,140,255,0.25);
+  opacity: 0;
+  animation: rise 1.8s ease 0.7s forwards;
+}
+.tagline-wrap {
+  display: flex; align-items: center; gap: 1.5rem;
+  margin-top: 1.5rem;
+  opacity: 0;
+  animation: rise 1.8s ease 1.2s forwards;
+}
+.line-accent {
+  width: 50px; height: 1px;
+  background: rgba(150,200,255,0.35);
+  flex-shrink: 0;
+}
+.tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(0.9rem, 2vw, 1.5rem);
+  font-weight: 300;
+  color: rgba(170,210,255,0.65);
+  letter-spacing: 0.12em;
+}
+.sub {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.5rem, 0.8vw, 0.65rem);
+  letter-spacing: 0.45em;
+  color: rgba(120,170,255,0.3);
+  text-transform: uppercase;
+  margin-top: 1rem;
+  opacity: 0;
+  animation: rise 1.8s ease 1.6s forwards;
+}
+.hud-right {
+  position: absolute; top: 50%; right: clamp(1.5rem, 3vw, 3rem);
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 1.2rem;
+  opacity: 0;
+  animation: rise 1.8s ease 2s forwards;
+}
+.hud-item {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem; letter-spacing: 0.25em;
+  color: rgba(130,180,255,0.3);
+  text-align: right;
+  text-transform: uppercase;
+}
+.hud-item span { display: block; color: rgba(180,215,255,0.5); margin-top: 2px; }
+.corner-tl, .corner-tr {
+  position: absolute; width: 25px; height: 25px;
+  opacity: 0; animation: rise 2s ease 2.2s forwards;
+}
+.corner-tl { top: 1.8rem; left: 1.8rem; border-top: 1px solid rgba(150,200,255,0.2); border-left: 1px solid rgba(150,200,255,0.2); }
+.corner-tr { top: 1.8rem; right: 1.8rem; border-top: 1px solid rgba(150,200,255,0.2); border-right: 1px solid rgba(150,200,255,0.2); }
+@keyframes rise { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+<canvas id="c1"></canvas>
+<canvas id="c2"></canvas>
+<div class="ui">
+  <div class="tag">Interstellar Tech Hackathon · 2025</div>
+  <div class="headline">Sankalan</div>
+  <div class="tagline-wrap">
+    <div class="line-accent"></div>
+    <div class="tagline">Where Stars Align &amp; Code Ignites</div>
+  </div>
+  <div class="sub">Stellar convergence of minds · beyond the cosmos</div>
+</div>
+<div class="hud-right">
+  <div class="hud-item">Nebula Class<span>NGC-7293</span></div>
+  <div class="hud-item">Distance<span>650 LY</span></div>
+  <div class="hud-item">Status<span>Active</span></div>
+</div>
+<div class="corner-tl"></div>
+<div class="corner-tr"></div>
+<script>
+const c1=document.getElementById('c1'), c2=document.getElementById('c2');
+const ctx1=c1.getContext('2d'), ctx2=c2.getContext('2d');
+let W,H,t=0,stars=[],shooters=[];
+
+function resize(){
+  W=c1.width=c2.width=window.innerWidth;
+  H=c1.height=c2.height=window.innerHeight;
+  drawBg(); initStars();
+}
+
+function drawBg(){
+  const g=ctx1.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#000000'); g.addColorStop(0.25,'#020010');
+  g.addColorStop(0.6,'#000618'); g.addColorStop(1,'#000000');
+  ctx1.fillStyle=g; ctx1.fillRect(0,0,W,H);
+}
+
+function initStars(){
+  stars=Array.from({length:1400},()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.3+0.1,
+    alpha:Math.random()*0.85+0.15,
+    tw:Math.random()*Math.PI*2,
+    spd:Math.random()*0.035+0.008,
+    color:['#ffffff','#cce0ff','#ffd8b0','#d0f0ff','#ffe8cc'][Math.floor(Math.random()*5)]
+  }));
+}
+
+function drawNebula(){
+  const blobs=[
+    {x:W*0.7,y:H*0.28,rx:W*0.42,ry:H*0.38,hue:205,sat:85,l:28,a:0.13},
+    {x:W*0.28,y:H*0.62,rx:W*0.38,ry:H*0.32,hue:255,sat:65,l:22,a:0.11},
+    {x:W*0.52,y:H*0.48,rx:W*0.32,ry:H*0.28,hue:182,sat:90,l:32,a:0.09},
+    {x:W*0.82,y:H*0.72,rx:W*0.28,ry:H*0.22,hue:225,sat:60,l:24,a:0.07},
+    {x:W*0.12,y:H*0.22,rx:W*0.22,ry:H*0.2,hue:315,sat:65,l:22,a:0.07},
+    {x:W*0.45,y:H*0.15,rx:W*0.3,ry:H*0.18,hue:190,sat:75,l:26,a:0.06},
+  ];
+  blobs.forEach(b=>{
+    const pulse=Math.sin(t*0.004+b.hue*0.01)*0.025;
+    const g=ctx2.createRadialGradient(b.x,b.y,0,b.x,b.y,Math.max(b.rx,b.ry));
+    g.addColorStop(0,`hsla(${b.hue},${b.sat}%,${b.l}%,${b.a+pulse})`);
+    g.addColorStop(0.5,`hsla(${b.hue+25},${b.sat-12}%,${b.l-6}%,${b.a*0.45})`);
+    g.addColorStop(1,`hsla(${b.hue},${b.sat}%,${b.l}%,0)`);
+    ctx2.save(); ctx2.scale(1,b.ry/b.rx);
+    ctx2.beginPath(); ctx2.arc(b.x,b.y*(b.rx/b.ry),b.rx,0,Math.PI*2);
+    ctx2.fillStyle=g; ctx2.fill(); ctx2.restore();
+  });
+}
+
+function drawStars(){
+  stars.forEach(s=>{
+    s.tw+=s.spd;
+    const a=s.alpha*(0.55+0.45*Math.sin(s.tw));
+    ctx2.beginPath(); ctx2.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx2.globalAlpha=a; ctx2.fillStyle=s.color; ctx2.fill(); ctx2.globalAlpha=1;
+  });
+}
+
+function drawShooters(){
+  if(Math.random()<0.012) shooters.push({x:Math.random()*W,y:Math.random()*H*0.55,vx:-3.5-Math.random()*3,vy:1.8+Math.random()*2,life:1});
+  shooters=shooters.filter(s=>s.life>0);
+  shooters.forEach(s=>{
+    ctx2.beginPath(); ctx2.moveTo(s.x,s.y); ctx2.lineTo(s.x-s.vx*22,s.y-s.vy*22);
+    const g=ctx2.createLinearGradient(s.x,s.y,s.x-s.vx*22,s.y-s.vy*22);
+    g.addColorStop(0,`rgba(255,255,255,${s.life*0.85})`); g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx2.strokeStyle=g; ctx2.lineWidth=1.5; ctx2.stroke();
+    s.x+=s.vx; s.y+=s.vy; s.life-=0.038;
+  });
+}
+
+function frame(){
+  ctx2.clearRect(0,0,W,H);
+  drawNebula(); drawStars(); drawShooters();
+  t++; requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize',()=>{resize();});
+resize(); frame();
+</script>
+</body>
+</html>
